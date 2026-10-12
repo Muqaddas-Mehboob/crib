@@ -1,98 +1,195 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
+import {
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+  Pressable,
+  useWindowDimensions,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+const properties = [
+  {
+    id: '1',
+    title: 'Modern Family House',
+    location: 'DHA, Karachi',
+    price: 'PKR 4.5 Crore',
+    beds: 4,
+    baths: 3,
+    image: '🏡',
+  },
+  {
+    id: '2',
+    title: 'Luxury Apartment',
+    location: 'Clifton, Karachi',
+    price: 'PKR 2.2 Crore',
+    beds: 3,
+    baths: 2,
+    image: '🏢',
+  },
+  {
+    id: '3',
+    title: 'Contemporary Villa',
+    location: 'Bahria Town, Karachi',
+    price: 'PKR 3.8 Crore',
+    beds: 5,
+    baths: 4,
+    image: '🏘️',
+  },
+];
 
 export default function HomeScreen() {
+  const { width } = useWindowDimensions();
+
+  const isWide = width >= 700;
+  const horizontalPadding = isWide ? 32 : 20;
+  const cardWidth = isWide ? '48%' : '100%';
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#F5F7FB' }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingHorizontal: horizontalPadding,
+          paddingTop: 20,
+          paddingBottom: 36,
+          width: '100%',
+          maxWidth: 1100,
+          alignSelf: 'center',
+        }}
+      >
+        <Text style={{ color: '#0E4D92', fontSize: 15, fontWeight: '700' }}>
+          CRIB
+        </Text>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+        <Text
+          style={{
+            color: '#172033',
+            fontSize: 28,
+            fontWeight: '800',
+            marginTop: 8,
+          }}
+        >
+          Find your place.
+        </Text>
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
+        <Text
+          style={{
+            color: '#667085',
+            fontSize: 15,
+            marginTop: 6,
+            marginBottom: 20,
+          }}
+        >
+          Discover a home that feels like yours.
+        </Text>
 
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+        <TextInput
+          placeholder="Search city, area, or property"
+          placeholderTextColor="#7B8494"
+          style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: 14,
+            padding: 16,
+            fontSize: 15,
+            borderWidth: 1,
+            borderColor: '#E3E8F0',
+            marginBottom: 24,
+          }}
+        />
+
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 16,
+          }}
+        >
+          <Text style={{ color: '#172033', fontSize: 20, fontWeight: '800' }}>
+            Featured properties
+          </Text>
+          <Text style={{ color: '#0E4D92', fontWeight: '700' }}>Karachi</Text>
+        </View>
+
+        <View
+          style={{
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            justifyContent: 'space-between',
+          }}
+        >
+          {properties.map((property) => (
+            <Pressable
+              key={property.id}
+              style={{
+                width: cardWidth,
+                backgroundColor: '#FFFFFF',
+                borderRadius: 18,
+                overflow: 'hidden',
+                borderWidth: 1,
+                borderColor: '#E7EBF2',
+                marginBottom: 16,
+              }}
+            >
+              <View
+                style={{
+                  height: 180,
+                  backgroundColor: '#EAF2FF',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text style={{ fontSize: 52 }}>{property.image}</Text>
+              </View>
+
+              <View style={{ padding: 16 }}>
+                <Text style={{ color: '#172033', fontSize: 18, fontWeight: '700' }}>
+                  {property.title}
+                </Text>
+
+                <Text
+                  style={{
+                    color: '#667085',
+                    fontSize: 13,
+                    marginTop: 6,
+                  }}
+                >
+                  {property.location}
+                </Text>
+
+                <Text
+                  style={{
+                    color: '#0E4D92',
+                    fontSize: 16,
+                    fontWeight: '800',
+                    marginTop: 12,
+                  }}
+                >
+                  {property.price}
+                </Text>
+
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    marginTop: 12,
+                    paddingTop: 12,
+                    borderTopWidth: 1,
+                    borderTopColor: '#EEF2F7',
+                  }}
+                >
+                  <Text style={{ color: '#475467', fontSize: 12, marginRight: 16 }}>
+                    {property.beds} beds
+                  </Text>
+                  <Text style={{ color: '#475467', fontSize: 12 }}>
+                    {property.baths} baths
+                  </Text>
+                </View>
+              </View>
+            </Pressable>
+          ))}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
-  },
-  title: {
-    textAlign: 'center',
-  },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
-  },
-});
