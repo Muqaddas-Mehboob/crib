@@ -18,3 +18,11 @@ export type Favourite = {
   property_id: number;
   properties: Property;
 };
+
+// One row of the bookings table, with its home joined in.
+export type Booking = {
+    id: number;
+    property_id: number;
+    visit_date: string; // "2026-10-22"
+    properties: Property;
+};

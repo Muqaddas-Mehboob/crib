@@ -243,3 +243,34 @@ values
 
 grant select on public.properties to authenticated;
 grant select, insert, delete on public.favourites to authenticated;
+
+-- Bookings: one row for each visit a user books.
+create table public.bookings (
+    id bigint generated always as identity primary key,
+    user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
+    property_id bigint not null references public.properties (id) on delete cascade,
+    visit_date date not null,
+    created_at timestamptz not null default now(),
+    -- The same user cannot book the same home for the same day twice.
+    unique (user_id, property_id, visit_date)
+);
+
+alter table public.bookings enable row level security;
+
+create policy "Users can read their own bookings"
+    on public.bookings for select
+    to authenticated
+    using (auth.uid() = user_id);
+
+create policy "Users can add their own bookings"
+    on public.bookings for insert
+    to authenticated
+    with check (auth.uid() = user_id);
+
+create policy "Users can cancel their own bookings"
+    on public.bookings for delete
+    to authenticated
+    using (auth.uid() = user_id);
+
+-- Needed on new Supabase projects, or the app gets "permission denied".
+grant select, insert, delete on public.bookings to authenticated;

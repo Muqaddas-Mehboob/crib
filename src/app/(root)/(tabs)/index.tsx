@@ -1,159 +1,58 @@
-import { FlashList } from '@shopify/flash-list';
-import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useState } from 'react';
-import {
-  ActivityIndicator,
-  BackHandler,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  ToastAndroid,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Link } from 'expo-router';
+import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 
-import { OfflineBanner } from '@/components/offline-banner';
-import { PropertyCard } from '@/components/property-card';
-import { EmptyView, ErrorView, LoadingView } from '@/components/state-views';
-import { useProperties } from '@/hooks/use-properties';
+import { BookingsSection } from '@/components/bookings-section';
+import { useAuth } from '@/context/auth-context';
+import { supabase } from '@/lib/supabase';
 
-export default function HomeScreen() {
-  // The filters modal sends the chosen city back as a URL parameter.
-  const { city } = useLocalSearchParams<{ city?: string }>();
-
-  const {
-    data,
-    isPending,
-    isError,
-    error,
-    refetch,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useProperties(city);
-
-  // data.pages is a list of pages; flat() joins them into one list of homes.
-  const properties = data?.pages.flat() ?? [];
-
-  // Pull to refresh: show the spinner only while the user's own refresh runs.
-  const [refreshing, setRefreshing] = useState(false);
-  async function onRefresh() {
-    setRefreshing(true);
-    await refetch();
-    setRefreshing(false);
-  }
-
-  // Infinite scroll: near the end of the list, load the next page if there is one.
-  function onEndReached() {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  }
-
-  // Android only: press back twice within 2 seconds to leave the app.
-  useFocusEffect(
-    useCallback(() => {
-      if (Platform.OS !== 'android') return;
-
-      let lastPress = 0;
-      const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
-        const now = Date.now();
-        if (now - lastPress < 2000) {
-          BackHandler.exitApp(); // second press: close the app
-          return true;
-        }
-        lastPress = now;
-        ToastAndroid.show('Press back again to exit', ToastAndroid.SHORT);
-        return true; // we handled it, so the app stays open
-      });
-
-      return () => subscription.remove();
-    }, [])
-  );
+export default function ProfileScreen() {
+  const { session } = useAuth();
+  const fullName = session?.user.user_metadata?.full_name as string | undefined;
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
-      <OfflineBanner />
+    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+      <Text style={styles.label}>Signed in as</Text>
+      {fullName ? <Text style={styles.name}>{fullName}</Text> : null}
+      <Text style={styles.email}>{session?.user.email}</Text>
 
-      <View style={styles.header}>
-        <Text style={styles.heading}>Find your next home</Text>
-        <Pressable
-          style={styles.filterButton}
-          onPress={() => router.push({ pathname: '/filters', params: city ? { city } : {} })}
-        >
-          <Text style={styles.filterText}>Filters</Text>
+      <Link href="/profile/settings" asChild>
+        <Pressable style={styles.row}>
+          <Text style={styles.rowText}>Settings</Text>
+          <Text style={styles.rowText}>›</Text>
         </Pressable>
-      </View>
+      </Link>
 
-      {city ? (
-        <View style={styles.activeFilter}>
-          <Text style={styles.activeFilterText}>Showing homes in {city}</Text>
-          <Pressable onPress={() => router.setParams({ city: undefined })}>
-            <Text style={styles.clearText}>Clear</Text>
-          </Pressable>
-        </View>
-      ) : null}
+      <Pressable style={styles.signOut} onPress={() => supabase.auth.signOut()}>
+        <Text style={styles.signOutText}>Sign out</Text>
+      </Pressable>
 
-      {/* Loading, error, then the list (which shows its own empty state) */}
-      {isPending ? (
-        <LoadingView />
-      ) : isError ? (
-        <ErrorView message={error.message} onRetry={refetch} />
-      ) : (
-        <FlashList
-          data={properties}
-          keyExtractor={(item) => String(item.id)}
-          renderItem={({ item }) => <PropertyCard property={item} />}
-          contentContainerStyle={styles.list}
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          onEndReached={onEndReached}
-          onEndReachedThreshold={0.5}
-          ListFooterComponent={
-            isFetchingNextPage ? <ActivityIndicator style={styles.footer} color="#0E4D92" /> : null
-          }
-          ListEmptyComponent={
-            <EmptyView
-              title="No homes found"
-              message={city ? `There are no homes in ${city} yet.` : 'Check back soon.'}
-            />
-          }
-        />
-      )}
-    </SafeAreaView>
+      <BookingsSection />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#F9FAFB' },
-  header: {
+  content: { padding: 16, gap: 12 },
+  label: { color: '#6B7280' },
+  name: { fontSize: 22, fontWeight: 'bold', color: '#111827' },
+  email: { fontSize: 16, color: '#4B5563', marginBottom: 8 },
+  row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  rowText: { fontSize: 16, color: '#111827' },
+  signOut: {
+    marginTop: 8,
+    padding: 14,
+    borderRadius: 12,
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 12,
+    backgroundColor: '#FEE2E2',
   },
-  heading: { fontSize: 22, fontWeight: 'bold', color: '#111827' },
-  filterButton: {
-    backgroundColor: '#0E4D92',
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 999,
-  },
-  filterText: { color: '#FFFFFF', fontWeight: 'bold' },
-  activeFilter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginHorizontal: 16,
-    marginBottom: 12,
-    padding: 10,
-    borderRadius: 8,
-    backgroundColor: '#E0ECF8',
-  },
-  activeFilterText: { color: '#0E4D92' },
-  clearText: { color: '#0E4D92', fontWeight: 'bold' },
-  list: { paddingHorizontal: 16, paddingBottom: 24 },
-  footer: { marginVertical: 16 },
+  signOutText: { color: '#B91C1C', fontWeight: 'bold', fontSize: 16 },
 });
