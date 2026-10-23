@@ -1,9 +1,8 @@
-import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { FavouriteButton } from '@/components/favourite-button';
-import { formatPrice } from '@/lib/format';
+import { PropertyImage } from '@/components/property-image';
 import type { Property } from '@/types/property';
 
 type Props = {
@@ -25,20 +24,12 @@ export function PropertyCard({ property }: Props) {
         accessibilityRole="button"
         accessibilityLabel={`${property.title}, ${property.city}`}
       >
-        {/* expo-image keeps downloaded photos in memory and on disk */}
-        <Image
-          source={property.image_url}
-          style={styles.image}
-          contentFit="cover"
-          transition={200}
-          cachePolicy="memory-disk"
-          recyclingKey={String(property.id)}
-        />
+        <PropertyImage imageUrl={property.image_url} style={styles.image} />
 
         <View style={styles.body}>
           <View style={styles.row}>
             <Text style={styles.title}>{property.title}</Text>
-            <Text style={styles.price}>{formatPrice(property.price)}</Text>
+            <Text style={styles.price}>{(property.price)}</Text>
           </View>
           <Text style={styles.city}>{property.city}</Text>
           <Text style={styles.meta}>
